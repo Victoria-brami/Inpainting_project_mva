@@ -1,0 +1,18 @@
+Project Draft
+
+Séances de travail:
+	- mercredi 15 décembre 9h30 - 13h: lecture article + rédaction proposal
+	- ????
+
+Résumé de l'article:
+
+Pistes:
+	- Etude avec ablation du discriminateur global
+	- Etude avec abaltion du discriminateur local
+	- Etude avec ablation de couches du réseau (retirer des filtres)
+
+A faire:
+	- Création d'un repo github
+	- A*Prise en main et adaption du code Lua en python
+
+Questions persistantes:
