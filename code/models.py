@@ -228,3 +228,48 @@ class ContextDiscriminator(nn.Module):
         x_gd = self.model_gd(x_gd)
         out = self.act1(self.linear1(self.concat1([x_ld, x_gd])))
         return out
+
+class TunedContextDiscriminator(nn.Module):
+    def __init__(self, local_input_shape, global_input_shape, arc='celeba'):
+        super(TunedContextDiscriminator, self).__init__()
+        self.arc = arc
+        if local_input_shape is None:
+            self.input_shape = [global_input_shape]
+            self.output_shape = (1,)
+            self.model_ld = None
+            self.model_gd = GlobalDiscriminator(global_input_shape, arc=arc)
+            # input_shape: [(None, 1024), (None, 1024)]
+            in_features = self.model_gd.output_shape[-1]
+        elif global_input_shape is None:
+            self.input_shape = [local_input_shape]
+            self.output_shape = (1,)
+            self.model_ld = LocalDiscriminator(local_input_shape)
+            self.model_gd = None
+            # input_shape: [(None, 1024), (None, 1024)]
+            in_features = self.model_ld.output_shape[-1]
+        else:
+            self.input_shape = [local_input_shape, global_input_shape]
+            self.output_shape = (1,)
+            self.model_ld = LocalDiscriminator(local_input_shape)
+            self.model_gd = GlobalDiscriminator(global_input_shape, arc=arc)
+            # input_shape: [(None, 1024), (None, 1024)]
+            in_features = self.model_ld.output_shape[-1] + self.model_gd.output_shape[-1]
+        self.concat1 = Concatenate(dim=-1)
+        # input_shape: (None, 2048)
+        self.linear1 = nn.Linear(in_features, 1)
+        self.act1 = nn.Sigmoid()
+        # output_shape: (None, 1)
+
+    def forward(self, x):
+        x_ld, x_gd = x
+        if self.model_ld is None:
+            x_gd = self.model_gd(x_gd)
+            out = self.act1(self.linear1(x_gd))
+        elif self.model_gd is None:
+            x_ld = self.model_gd(x_ld)
+            out = self.act1(self.linear1(x_ld))
+        else:
+            x_ld = self.model_ld(x_ld)
+            x_gd = self.model_gd(x_gd)
+            out = self.act1(self.linear1(self.concat1([x_ld, x_gd])))
+        return out
