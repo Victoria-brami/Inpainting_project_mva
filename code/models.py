@@ -261,14 +261,16 @@ class TunedContextDiscriminator(nn.Module):
         # output_shape: (None, 1)
 
     def forward(self, x):
-        x_ld, x_gd = x
         if self.model_ld is None:
+            x_gd = x
             x_gd = self.model_gd(x_gd)
             out = self.act1(self.linear1(x_gd))
         elif self.model_gd is None:
+            x_ld = x
             x_ld = self.model_gd(x_ld)
             out = self.act1(self.linear1(x_ld))
         else:
+            x_ld, x_gd = x
             x_ld = self.model_ld(x_ld)
             x_gd = self.model_gd(x_gd)
             out = self.act1(self.linear1(self.concat1([x_ld, x_gd])))

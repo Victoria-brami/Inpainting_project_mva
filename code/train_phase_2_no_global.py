@@ -175,9 +175,9 @@ def main(args):
             output_cn = model_cn(input_cn)
             input_gd_fake = output_cn.detach()
             input_ld_fake = crop(input_gd_fake, hole_area_fake)
-            output_fake = model_cd((
-                input_ld_fake.to(gpu),
-                input_gd_fake.to(gpu)))
+            output_fake = model_cd(
+                input_ld_fake.to(gpu)
+            )
             loss_fake = bceloss(output_fake, fake)
 
             # real forward
@@ -187,7 +187,7 @@ def main(args):
             real = torch.ones((len(x), 1)).to(gpu)
             input_gd_real = x
             input_ld_real = crop(input_gd_real, hole_area_real)
-            output_real = model_cd((input_ld_real, input_gd_real))
+            output_real = model_cd(input_ld_real)
             loss_real = bceloss(output_real, real)
 
             # reduce
