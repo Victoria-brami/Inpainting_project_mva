@@ -17,5 +17,5 @@ module load python/3.7.6
 conda activate GLCIC
 
 set -x
-python train_phase_2_no_local.py /gpfsscratch/rech/rnt/uuj49ar/img_align_celeba  /gpfsscratch/rech/rnt/uuj49ar/inpainting/results/no_local --init_model_cn /gpfsscratch/rech/rnt/uuj49ar/inpainting/results/no_local/phase_1/model_cn_step20000 --data_parallel
+python train_phase_2_no_local.py /gpfsscratch/rech/rnt/uuj49ar/img_align_celeba  /gpfsscratch/rech/rnt/uuj49ar/inpainting/results/no_local --init_model_cn /gpfsscratch/rech/rnt/uuj49ar/inpainting/results/no_local/phase_1/model_cn_step90000 --data_parallel
 

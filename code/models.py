@@ -267,7 +267,7 @@ class TunedContextDiscriminator(nn.Module):
             out = self.act1(self.linear1(x_gd))
         elif self.model_gd is None:
             x_ld = x
-            x_ld = self.model_gd(x_ld)
+            x_ld = self.model_ld(x_ld)
             out = self.act1(self.linear1(x_ld))
         else:
             x_ld, x_gd = x
