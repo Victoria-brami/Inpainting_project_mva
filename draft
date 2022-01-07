@@ -13,6 +13,17 @@ Pistes:
 
 A faire:
 	- Création d'un repo github
-	- A*Prise en main et adaption du code Lua en python
+	- Prise en main et adaption du code (repris le lien du prof)
+	- Training sans discriminateur local (fait sur celebA)
+	- Training sans discriminateur global (fait sur celebA)
+	- Explorer l'importance de chaque couche du réseau génératif
 
 Questions persistantes:
+    - A compléter
+
+Ressources:
+    - Etude d'ablation de couches:
+        pdf qui explique le principe: https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwiUlvvCuKD1AhVSXRoKHXJ9BEEQFnoECCwQAQ&url=https%3A%2F%2Fwww.diva-portal.org%2Fsmash%2Fget%2Fdiva2%3A1349978%2FFULLTEXT01.pdf&usg=AOvVaw2Lhnj3rA6xMS-TvnICOHKc
+        video tuto qui peut être utile: https://www.youtube.com/watch?v=JsJo_2wvQFk
+
+
