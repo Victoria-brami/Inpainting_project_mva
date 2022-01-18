@@ -3,6 +3,7 @@ import os
 import imghdr
 import torch.utils.data as data
 from PIL import Image
+import random
 
 
 class ImageDataset(data.Dataset):
@@ -11,6 +12,10 @@ class ImageDataset(data.Dataset):
         self.data_dir = os.path.expanduser(data_dir)
         self.transform = transform
         self.imgpaths = self.__load_imgpaths_from_dir(self.data_dir, walk=recursive_search)
+
+        super().__init__()
+        self._original_train = None
+
 
     def __len__(self):
         return len(self.imgpaths)
@@ -44,3 +49,8 @@ class ImageDataset(data.Dataset):
                     continue
                 imgpaths.append(path)
         return imgpaths
+
+    def shuffle(self):
+        random.shuffle(self.imgpaths)
+
+
