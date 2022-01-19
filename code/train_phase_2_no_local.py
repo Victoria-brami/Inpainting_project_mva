@@ -60,7 +60,7 @@ def main(args):
     # create result directory (if necessary)
     if not os.path.exists(args.result_dir):
         os.makedirs(args.result_dir)
-    for phase in ['phase_1', 'phase_2', 'phase_3']:
+    for phase in ['phase_1', 'phase_2_test', 'phase_3']:
         if not os.path.exists(os.path.join(args.result_dir, phase)):
             os.makedirs(os.path.join(args.result_dir, phase))
 
@@ -177,6 +177,7 @@ def main(args):
             input_ld_fake = crop(input_gd_fake, hole_area_fake)
             output_fake = model_cd(
                 input_gd_fake.to(gpu))
+            print("Output fake and fake shape: ", output_fake.shape, fake.shape)
             loss_fake = bceloss(output_fake, fake)
 
             # real forward
@@ -187,6 +188,7 @@ def main(args):
             input_gd_real = x
             input_ld_real = crop(input_gd_real, hole_area_real)
             output_real = model_cd(input_gd_real)
+            print("Output real and real shape: ", output_real.shape, real.shape)
             loss_real = bceloss(output_real, real)
 
             # reduce
@@ -230,11 +232,11 @@ def main(args):
                             completed.cpu()), dim=0)
                         imgpath = os.path.join(
                             args.result_dir,
-                            'phase_2_only',
+                            'phase_2_test',
                             'step%d.png' % pbar.n)
                         model_cd_path = os.path.join(
                             args.result_dir,
-                            'phase_2_only',
+                            'phase_2_test',
                             'model_cd_step%d' % pbar.n)
                         save_image(imgs, imgpath, nrow=len(x))
                         if args.data_parallel:
