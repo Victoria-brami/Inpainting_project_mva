@@ -1,18 +1,25 @@
 import torch
+import torch.nn as nn
 import numpy as np
 from code.evaluation_tools.fid import get_fid
 import os
 import torchvision
 
-#inception_model = torchvision.models.inception_v3(pretrained=False)
+class FIDInceptionV3(nn.Module):
+
+    def __init__(self):
+        super(FIDInceptionV3, self).__init__()
+        inception_model = torchvision.models.inception_v3(pretrained=False)
+        self.model = torch.nn.Sequential(*list(inception_model.children())[:-1])
+
+    def forward(self, x):
+        # reshape x
 
 
 class ModelEvaluation:
     def __init__(self, device='cpu'):
         self.device = device
-        print("Model Eval initilaized")
-        inception_model = torchvision.models.inception_v3(pretrained=False)
-        self.model = torch.nn.Sequential(*list(inception_model.children())[:-1])
+        self.model = FIDInceptionV3()
         self.model.eval()
         print("Inception model loaded")
 

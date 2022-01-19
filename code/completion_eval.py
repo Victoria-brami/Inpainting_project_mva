@@ -12,11 +12,12 @@ from code.datasets import ImageDataset
 import torchvision.transforms as transforms
 import os
 
-class EvalDataloader:
+class EvalDataloader(object):
 
     def __init__(self, mode, model, data_iterator, params):
         assert mode in ["gen", "rc", "gt"]
         self.batches = []
+        self.transforms = transforms.Compose([transforms.Resize(299), transforms.ToPILImage(), transforms.ToTensor()])
         with torch.no_grad():
             for databatch in tqdm(data_iterator, desc=f"Construct dataloader: {mode}.."):
                 if mode == "gt":
@@ -36,7 +37,7 @@ class EvalDataloader:
                     x_mask = databatch - databatch * mask + params["mpv"] * mask
                     input = torch.cat((x_mask, mask), dim=1)
                     batch = model(input)
-                self.batches.append(batch)
+                self.batches.append(self.transforms(batch))
 
     def __iter__(self):
         return iter(self.batches)
@@ -74,7 +75,7 @@ def evaluate(params, device='cpu'):
     # load dataset
     trnsfm = transforms.Compose([
         transforms.Resize(params["cn_input_size"]),
-        transforms.RandomCrop((params["cn_input_size"], params["cn_input_size"])),
+        #transforms.RandomCrop((params["cn_input_size"], params["cn_input_size"])),
         transforms.ToTensor(),
     ])
     print('3_ loading dataset... (it may take a few minutes)')
