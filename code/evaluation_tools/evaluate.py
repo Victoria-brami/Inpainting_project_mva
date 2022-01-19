@@ -6,6 +6,7 @@ import torchvision
 
 inception_model = torchvision.models.inception_v3(pretrained=False)
 
+
 class ModelEvaluation:
     def __init__(self, device='cpu'):
         self.device = device
