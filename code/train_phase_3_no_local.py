@@ -254,15 +254,15 @@ def main(args):
                             completed.cpu()), dim=0)
                         imgpath = os.path.join(
                             args.result_dir,
-                            'phase_3',
+                            'phase_3_only',
                             'step%d.png' % pbar.n)
                         model_cn_path = os.path.join(
                             args.result_dir,
-                            'phase_3',
+                            'phase_3_only',
                             'model_cn_step%d' % pbar.n)
                         model_cd_path = os.path.join(
                             args.result_dir,
-                            'phase_3',
+                            'phase_3_only',
                             'model_cd_step%d' % pbar.n)
                         save_image(imgs, imgpath, nrow=len(x))
                         if args.data_parallel:

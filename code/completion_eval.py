@@ -106,6 +106,8 @@ def evaluate(params, device='cpu'):
 
             all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader)
 
+            print("Iteration {}: FID score: {}".format(idx, all_metrics[seed]))
+
     except KeyboardInterrupt:
         string = "Saving the evaluation before exiting.."
         print(string)
@@ -116,7 +118,7 @@ def evaluate(params, device='cpu'):
     metricname = "evaluation_metrics_{}_all.yaml".format(epoch)
 
     metrics = {"feats": {key: [format_metrics(all_metrics[seed])[key] for seed in all_metrics.keys()] for key in all_metrics[all_seeds[0]]}}
-
+    
     evalpath = os.path.join(output_folder, metricname)
     print(f"Saving evaluation: {evalpath}")
     save_metrics(evalpath, metrics)

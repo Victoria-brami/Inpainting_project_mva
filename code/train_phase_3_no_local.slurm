@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:3
 #SBATCH --cpus-per-task=3
 #SBATCH --hint=nomultithread
-#SBATCH --time=10:00:00
+#SBATCH --time=20:00:00
 #SBATCH --output=out_s3_no_local.out
 #SBATCH --error=out_s3_no_local.out
 
