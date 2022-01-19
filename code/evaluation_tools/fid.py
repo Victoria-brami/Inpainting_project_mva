@@ -1,10 +1,10 @@
 import numpy as np
-from numpy import linalg
+from scipy import linalg
 
 
 def get_fid(gt_stats, gen_stats):
-    return compute_frechet_distance(gt_stats[0], gt_stats[1],
-                                    gen_stats[0], gen_stats[1])
+    return compute_frechet_distance(gt_stats["mu"], gt_stats["sigma"],
+                                    gen_stats["mu"], gen_stats["sigma"])
 
 def compute_frechet_distance(mu1, sigma1, mu2, sigma2, eps=1e-6):
     """Numpy implementation of the Frechet Distance.

@@ -9,11 +9,14 @@ class FIDInceptionV3(nn.Module):
 
     def __init__(self):
         super(FIDInceptionV3, self).__init__()
-        inception_model = torchvision.models.inception_v3(pretrained=False)
+        inception_model = torchvision.models.resnet50(pretrained=False)
         self.model = torch.nn.Sequential(*list(inception_model.children())[:-1])
 
     def forward(self, x):
         # reshape x
+        #print('Input shape is :', x.shape)
+        x = self.model(x)
+        return x
 
 
 class ModelEvaluation:
@@ -27,7 +30,7 @@ class ModelEvaluation:
         activations = []
         with torch.no_grad():
             for (idx, batch) in enumerate(loader):
-                print(" Batch input shape: ", batch.shape)
+                #print(" Batch input shape: ", batch.shape)
                 activations.append(self.model(batch))
             activations = torch.cat(activations, dim=0)
         return activations
@@ -35,6 +38,8 @@ class ModelEvaluation:
     @staticmethod
     def compute_activations_statistics(activations):
         activations = activations.cpu().numpy()
+        #print("\n Shape of the activations", type(activations), activations.shape, activations[:, :, 0, 0].shape)
+        activations = activations[:, :, 0, 0]
         mu = np.mean(activations, axis=0)
         sigma = np.cov(activations, rowvar=False)
         return mu, sigma

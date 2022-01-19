@@ -11,37 +11,56 @@ from PIL import Image
 from code.datasets import ImageDataset
 import torchvision.transforms as transforms
 import os
+from torch.utils.data import Dataset
 
-class EvalDataloader(object):
+class EvalDataset(Dataset):
 
     def __init__(self, mode, model, data_iterator, params):
         assert mode in ["gen", "rc", "gt"]
         self.batches = []
-        self.transforms = transforms.Compose([transforms.Resize(299), transforms.ToPILImage(), transforms.ToTensor()])
+        self.transforms = transforms.Compose([transforms.Resize((299, 299)), transforms.ToPILImage(), transforms.ToTensor()])
+        self.data_iterator = data_iterator
+        self.params = params
+        self.model = model
+        self.mode = mode
+        self.build_batches()
+
+    def build_batches(self):    
         with torch.no_grad():
-            for databatch in tqdm(data_iterator, desc=f"Construct dataloader: {mode}.."):
-                if mode == "gt":
-                    batch = databatch.to(params["device"])
+            for databatch in tqdm(self.data_iterator, desc=f"Construct EVAL dataset: {self.mode}.."):
+                batch = databatch.to(self.params["device"])
+                batch_size = batch.shape[0]
+                if self.mode == "gt":
+                    for i in range(batch_size):
+                        self.batches.append(batch[i, :, :, :])
                 else:
-                    databatch = databatch.to(params["device"])
+                    databatch = databatch.to(self.params["device"])
                     mask = gen_input_mask(
                         shape=(databatch.shape[0], 1, databatch.shape[2], databatch.shape[3]),
                         hole_size=(
-                            (params["hole_min_w"], params["hole_max_w"]),
-                            (params["hole_min_h"], params["hole_max_h"])),
+                            (self.params["hole_min_w"], self.params["hole_max_w"]),
+                            (self.params["hole_min_h"], self.params["hole_max_h"])),
                         hole_area=gen_hole_area(
-                            (params["ld_input_size"], params["ld_input_size"]),
+                            (self.params["ld_input_size"], self.params["ld_input_size"]),
                             (databatch.shape[3], databatch.shape[2])),
-                        max_holes=params["max_holes"],
-                    ).to(params["device"])
-                    x_mask = databatch - databatch * mask + params["mpv"] * mask
-                    input = torch.cat((x_mask, mask), dim=1)
-                    batch = model(input)
-                self.batches.append(self.transforms(batch))
+                        max_holes=self.params["max_holes"],
+                    ).to(self.params["device"])
+                    x_mask = databatch - databatch * mask + self.params["mpv"] * mask
+                    inp = torch.cat((x_mask, mask), dim=1)
+                    batch = self.model(inp)
+                    for i in range(batch_size):
+                        self.batches.append(batch[i, :, :, :])
+            
 
-    def __iter__(self):
-        return iter(self.batches)
+    def __len__(self):
+        return len(self.batches)
 
+    def __getitem__(self, item):
+        sample = self.batches[item]
+        if self.transforms:
+            sample = self.transforms(sample)
+        #print('\n Considering a sample of size .....', sample.shape)
+        return sample
 
 
 def compute_mpv(train_dataset, mpv=None, device="cpu"):
@@ -102,8 +121,10 @@ def evaluate(params, device='cpu'):
             gt2_dataset.shuffle()
 
             data_iterator = DataLoader(gt1_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=2)
-            gt_loader = EvalDataloader("gt", model, data_iterator, params)
-            gen_loader = EvalDataloader("gen", model, data_iterator, params)
+            gt_dataset = EvalDataset("gt", model, data_iterator, params)
+            gen_dataset = EvalDataset("gen", model, data_iterator, params)
+            gt_loader = DataLoader(gt_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=2)
+            gen_loader = DataLoader(gen_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=2)
 
             all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader)
 
