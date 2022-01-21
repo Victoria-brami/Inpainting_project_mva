@@ -50,7 +50,7 @@ class EvalDataset(Dataset):
                     batch = self.model(inp)
                     for i in range(batch_size):
                         self.batches.append(batch[i, :, :, :])
-            
+        del self.data_iterator   
 
     def __len__(self):
         return len(self.batches)
@@ -129,13 +129,17 @@ def evaluate(params, device='cpu'):
             all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader)
 
             print("Iteration {}: FID score: {}".format(idx, all_metrics[seed]))
+            del gt_loader
+            del gen_loader
+            del gen_dataset
+            del gt_dataset
 
     except KeyboardInterrupt:
         string = "Saving the evaluation before exiting.."
         print(string)
 
     epoch = params["checkpointpath"].split("_")[-1][4:]
-    output_folder = os.path.join(params["checkpointpath"].split("/")[:-1])
+    output_folder = os.path.join(params["checkpointpath"].split("/model")[0])
 
     metricname = "evaluation_metrics_{}_all.yaml".format(epoch)
 

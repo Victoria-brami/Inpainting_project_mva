@@ -5,7 +5,7 @@ def parser():
     parser.add_argument('--checkpointpath', type=str, default='/gpfsscratch/rech/rnt/uuj49ar/inpainting/results/no_global/phase_3_only/model_cn_step400000')
     parser.add_argument('--device', type=str, default='cpu')
     parser.add_argument('--niter', default=2, type=int, help="number of iterations")
-    parser.add_argument('--data_dir', default='/gpfsscratch/rech/rnt/uuj49ar/partial_img_align_celeba')
+    parser.add_argument('--data_dir', default='/gpfsscratch/rech/rnt/uuj49ar/test_partial_img_align_celeba')
     parser.add_argument('--output_folder', default='evaluations/')
     parser.add_argument('--data_parallel', action='store_true')
     parser.add_argument('--recursive_search', action='store_true', default=False)

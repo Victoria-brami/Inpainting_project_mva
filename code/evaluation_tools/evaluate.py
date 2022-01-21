@@ -9,8 +9,11 @@ class FIDInceptionV3(nn.Module):
 
     def __init__(self):
         super(FIDInceptionV3, self).__init__()
-        inception_model = torchvision.models.resnet50(pretrained=False)
-        self.model = torch.nn.Sequential(*list(inception_model.children())[:-1])
+        resnet_model = torchvision.models.resnet50(pretrained=False)
+        checkpoint = torch.load('/gpfswork/rech/rnt/uuj49ar/resnet50-0676ba61.pth')
+        resnet_model.load_state_dict(checkpoint)
+
+        self.model = torch.nn.Sequential(*list(resnet_model.children())[:-1])
 
     def forward(self, x):
         # reshape x

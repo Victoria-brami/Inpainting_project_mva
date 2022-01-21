@@ -9,7 +9,7 @@ def main():
     # Eval = ModelEvaluation()
     print("DEFINED EVAL CLASS")
     evaluate(parameters)
-    print("Evaluation DONE, please see in {}".format())
+    print("Evaluation DONE, please see in {}")
 
 
 if __name__ == '__main__':
