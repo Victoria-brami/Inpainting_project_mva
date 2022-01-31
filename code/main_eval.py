@@ -1,15 +1,17 @@
 from code.parser.evaluation import parser
 from code.completion_eval import evaluate
 import os
-#os.system('pip install torch==1.9.1')
+
+import numpy as np#os.system('pip install torch==1.9.1')
 
 def main():
     parameters = parser()
+    print("\n", parameters)
     print("Parser defined")
     # Eval = ModelEvaluation()
-    print("DEFINED EVAL CLASS")
+    np.random.seed(parameters["seed"])
     evaluate(parameters)
-    print("Evaluation DONE, please see in {}")
+    print("\n   Evaluation DONE, please see in {}")
 
 
 if __name__ == '__main__':

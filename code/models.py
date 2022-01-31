@@ -1,7 +1,10 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from layers import Flatten, Concatenate
+
+
 
 
 class CompletionNetwork(nn.Module):
@@ -169,30 +172,72 @@ class CompletionNetworkZero(nn.Module):
         self.conv17 = nn.Conv2d(32, 3, kernel_size=3, stride=1, padding=1)
         self.act17 = nn.Sigmoid()
         # output_shape: (None, 3, img_h. img_w)
+        self.erase_canal()
+
+    def erase_canal(self):
+        self.canal = -100
+        if self.i in [1, 15]:
+            self.canal = np.random.choice(64)
+        elif self.i in [2, 3, 13, 14]:
+            self.canal = np.random.choice(128)
+        elif self.i in [4, 5, 6, 7, 8, 9, 10, 11, 12]:
+            self.canal = np.random.choice(256)
+        print('\n \n    CHOSEN CANAL IS {} \n \n'.format(self.canal))
 
     def forward(self, x):
         x = self.bn1(self.act1(self.conv1(x)))
+        if self.i == 1:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn2(self.act2(self.conv2(x)))
+        if self.i == 2:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn3(self.act3(self.conv3(x)))
+        if self.i == 3:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn4(self.act4(self.conv4(x)))
+        if self.i == 4:
+            x[:, self.canal, :, :] = 0
+
+
         x = self.bn5(self.act5(self.conv5(x)))
+        if self.i == 5:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn6(self.act6(self.conv6(x)))
+        if self.i == 6:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn7(self.act7(self.conv7(x)))
+        if self.i == 7:
+            x[:, self.canal, :, :] = 0
+        
         x = self.bn8(self.act8(self.conv8(x)))
+        if self.i == 8:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn9(self.act9(self.conv9(x)))
+        if self.i == 9:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn10(self.act10(self.conv10(x)))
+        if self.i == 10:
+            x[:, self.canal, :, :] = 0
+
         x = self.bn11(self.act11(self.conv11(x)))
         x = self.bn12(self.act12(self.conv12(x)))
         x = self.bn13(self.act13(self.deconv13(x)))
         x = self.bn14(self.act14(self.conv14(x)))
         if self.i == 14:
-            x[0, :, :, :] = 0
+            x[:, self.canal, :, :] = 0
         x = self.bn15(self.act15(self.deconv15(x)))
         if self.i == 15:
-            x[0, :, :, :] = 0
+            x[:, self.canal, :, :] = 0
         x = self.bn16(self.act16(self.conv16(x)))
         if self.i == 16:
-            x[0, :, :, :] = 0
+            x[:, self.canal, :, :] = 0
         x = self.act17(self.conv17(x))
         return x
 

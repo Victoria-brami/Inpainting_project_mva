@@ -5,7 +5,7 @@ from code.tools.fixseed import fixseed
 from code.tools.metric_tools import format_metrics, save_metrics
 from tqdm import tqdm
 from code.utils import gen_input_mask, gen_hole_area
-from code.models import CompletionNetwork
+from code.models import CompletionNetwork, CompletionNetworkZero
 import numpy as np
 from PIL import Image
 from code.datasets import ImageDataset
@@ -85,7 +85,10 @@ def compute_mpv(train_dataset, mpv=None, device="cpu"):
 
 def evaluate(params, device='cpu'):
     print("0_ Start evaluation process")
-    model = CompletionNetwork()
+    if params["layer_idx"] != 100:
+        model = CompletionNetworkZero(int(params["layer_idx"]))
+    else:
+        model = CompletionNetwork()
     state_dict = torch.load(params["checkpointpath"], map_location=device)
     model.load_state_dict(state_dict)
     model.eval()
@@ -141,7 +144,7 @@ def evaluate(params, device='cpu'):
     epoch = params["checkpointpath"].split("_")[-1][4:]
     output_folder = os.path.join(params["checkpointpath"].split("/model")[0])
 
-    metricname = "evaluation_metrics_{}_all.yaml".format(epoch)
+    metricname = "layer_{}_canal_{}_evaluation_metrics_{}_all.yaml".format(params["layer_idx"], model.canal, epoch)
 
     metrics = {"feats": {key: [format_metrics(all_metrics[seed])[key] for seed in all_metrics.keys()] for key in all_metrics[all_seeds[0]]}}
     
