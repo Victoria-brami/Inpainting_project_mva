@@ -19,6 +19,7 @@ def parser():
     parser.add_argument('--ld_input_size', type=int, default=96)
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--patch_size', type=int, default=7)
     parser.add_argument('--mpv', nargs=3, type=float, default=1)
     parser.add_argument('--alpha', type=float, default=4e-4)
     parser.add_argument('--arc', type=str, choices=['celeba', 'places2'], default='celeba')
