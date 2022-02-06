@@ -2,16 +2,20 @@ import yaml
 import os
 
 
-def merge_yaml_files(path, layer_name):
+def merge_yaml_files(path, layer_name, fid_only=True):
     """ Merges all the fid evaluations files into a single one """
-    merged_yaml_file = {'feats': {'fid': {}}}
+    if fid_only:
+        merged_yaml_file = {'feats': {'fid': {}}}
+    else:
+        merged_yaml_file = {'feats': {'fid': {}}}
     for file in os.listdir(path):
         if file.startswith(layer_name):
             with open(os.path.join(path, file), 'r') as yfile:
                 string = yfile.read()
                 data = yaml.load(string, yaml.loader.BaseLoader)
                 canal_name = '{}_{}'.format(file.split('_')[2], file.split('_')[3])
-                merged_yaml_file['feats']['fid'][canal_name] = [data['feats']['fid']]
+                print(data['feats']['fid'])
+                merged_yaml_file['feats']['fid'][canal_name] = data['feats']['fid']
     with open(os.path.join(path, '{}_evaluation_metrics_all.yaml'.format(layer_name)), "w") as res_yfile:
         yaml.dump(merged_yaml_file, res_yfile)
 

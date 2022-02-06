@@ -421,3 +421,8 @@ class TunedContextDiscriminator(nn.Module):
             x_gd = self.model_gd(x_gd)
             out = self.act1(self.linear1(self.concat1([x_ld, x_gd])))
         return out
+
+
+if __name__ == '__main__':
+    from torchsummary import summary
+    summary(CompletionNetwork(), input_size=(4, 218, 178))

@@ -8,23 +8,23 @@ from code.utils import gen_input_mask, gen_hole_area
 from code.models import CompletionNetwork, CompletionNetworkZero
 import numpy as np
 from PIL import Image
-from code.datasets import ImageDataset
+from code.comparison_datasets import ComparisonImageDataset
 import torchvision.transforms as transforms
 import os
 from torch.utils.data import Dataset
 
 
-class EvalDataset(Dataset):
+class ComparisonEvalDataset(Dataset):
 
-    def __init__(self, mode, model, data_iterator, params):
-        assert mode in ["gen", "rc", "gt"]
+    def __init__(self, mode, data_iterator, params):
         self.batches = []
         self.transforms = transforms.Compose(
             [transforms.Resize((299, 299)), transforms.ToPILImage(), transforms.ToTensor()])
+        self.transforms = None
         self.data_iterator = data_iterator
         self.params = params
-        self.model = model
         self.mode = mode
+        assert self.mode in ["cn", "patch7", "gt"]
         self.build_batches()
 
     def build_batches(self):
@@ -32,26 +32,8 @@ class EvalDataset(Dataset):
             for databatch in tqdm(self.data_iterator, desc=f"Construct EVAL dataset: {self.mode}.."):
                 batch = databatch.to(self.params["device"])
                 batch_size = batch.shape[0]
-                if self.mode == "gt":
-                    for i in range(batch_size):
-                        self.batches.append(batch[i, :, :, :])
-                else:
-                    databatch = databatch.to(self.params["device"])
-                    mask = gen_input_mask(
-                        shape=(databatch.shape[0], 1, databatch.shape[2], databatch.shape[3]),
-                        hole_size=(
-                            (self.params["hole_min_w"], self.params["hole_max_w"]),
-                            (self.params["hole_min_h"], self.params["hole_max_h"])),
-                        hole_area=gen_hole_area(
-                            (self.params["ld_input_size"], self.params["ld_input_size"]),
-                            (databatch.shape[3], databatch.shape[2])),
-                        max_holes=self.params["max_holes"],
-                    ).to(self.params["device"])
-                    x_mask = databatch - databatch * mask + self.params["mpv"] * mask
-                    inp = torch.cat((x_mask, mask), dim=1)
-                    batch = self.model(inp)
-                    for i in range(batch_size):
-                        self.batches.append(batch[i, :, :, :])
+                for i in range(batch_size):
+                    self.batches.append(batch[i, :, :, :])
         del self.data_iterator
 
     def __len__(self):
@@ -85,30 +67,26 @@ def compute_mpv(train_dataset, mpv=None, device="cpu"):
     return mpv
 
 
-def evaluate(params, device='cpu', fid_only=True):
+def comparison_evaluate(params, device='cpu', fid_only=False):
     print("0_ Start evaluation process")
-    if params["layer_idx"] != 100:
-        model = CompletionNetworkZero(int(params["layer_idx"]))
-    else:
-        model = CompletionNetwork()
-    state_dict = torch.load(params["checkpointpath"], map_location=device)
-    model.load_state_dict(state_dict)
-    model.eval()
     model_evaluator = ModelEvaluation(device=device)
 
     # load dataset
     trnsfm = transforms.Compose([
-        transforms.Resize(params["cn_input_size"]),
+        #transforms.Resize(params["cn_input_size"]),
         # transforms.RandomCrop((params["cn_input_size"], params["cn_input_size"])),
         transforms.ToTensor(),
     ])
     print('3_ loading dataset... (it may take a few minutes)')
-    gt1_dataset = ImageDataset(os.path.join(params["data_dir"], 'train'),
-                               trnsfm,
-                               recursive_search=params["recursive_search"])
-    gt2_dataset = ImageDataset(os.path.join(params["data_dir"], 'train'),
-                               trnsfm,
-                               recursive_search=params["recursive_search"])
+    gt1_dataset = ComparisonImageDataset(os.path.join(params["comparison_data_dir"]),
+                               transform=trnsfm,
+                               recursive_search=True, image_type='gt')
+    gt2_dataset = ComparisonImageDataset(os.path.join(params["comparison_data_dir"]),
+                               transform=trnsfm,
+                               recursive_search=True, image_type=params["model_to_compare"])
+    mask_dataset = ComparisonImageDataset(os.path.join(params["comparison_data_dir"]),
+                                         transform=None,
+                                         recursive_search=True, image_type='mask')
     all_seeds = list(range(params["niter"]))
     all_metrics = {}
 
@@ -121,19 +99,22 @@ def evaluate(params, device='cpu', fid_only=True):
             fixseed(seed)
 
             # gt1_dataset.reset_shuffle()
-            gt1_dataset.shuffle()
+            #gt1_dataset.shuffle()
             # gt2_dataset.reset_shuffle()
-            gt2_dataset.shuffle()
+            #gt2_dataset.shuffle()
 
-            data_iterator = DataLoader(gt1_dataset, batch_size=params["batch_size"], shuffle=False, num_workers=2)
-            gt_dataset = EvalDataset("gt", model, data_iterator, params)
-            gen_dataset = EvalDataset("gen", model, data_iterator, params)
-            gt_loader = DataLoader(gt_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=2)
-            gen_loader = DataLoader(gen_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=2)
+            data_iterator = DataLoader(gt1_dataset, batch_size=params["comparison_batch_size"], shuffle=False, num_workers=2)
+            data_iterator2 = DataLoader(gt2_dataset, batch_size=params["comparison_batch_size"], shuffle=False,
+                                       num_workers=2)
+            gt_dataset = ComparisonEvalDataset("gt", data_iterator, params)
+            print(params["model_to_compare"])
+            gen_dataset =  ComparisonEvalDataset(params["model_to_compare"], data_iterator2, params)
 
-            all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader, device='cuda', fid_only=False)
+            gt_loader = DataLoader(gt_dataset, batch_size=params["comparison_batch_size"], shuffle=False, num_workers=2)
+            gen_loader = DataLoader(gen_dataset, batch_size=params["comparison_batch_size"], shuffle=False, num_workers=2)
 
-            print("Iteration {}: FID score: {}".format(idx, all_metrics[seed]))
+            all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader, mask_dataset, fid_only=False)
+
             del gt_loader
             del gen_loader
             del gen_dataset
@@ -144,13 +125,13 @@ def evaluate(params, device='cpu', fid_only=True):
         print(string)
 
     epoch = params["checkpointpath"].split("_")[-1][4:]
-    output_folder = os.path.join(params["checkpointpath"].split("/model")[0])
+    output_folder = '../evaluation/'
 
-    metricname = "evaluation_metrics_completion_{}_and_patchmatch{}.yaml".format(epoch, params['patch_size'])
+    metricname = "evaluation_metrics_{}_{}_comparison.yaml".format(epoch, params["model_to_compare"])
 
     metrics = {"feats": {key: [format_metrics(all_metrics[seed])[key] for seed in all_metrics.keys()] for key in
                          all_metrics[all_seeds[0]]}}
 
     evalpath = os.path.join(output_folder, metricname)
-    print(f"Saving evaluation: {evalpath}")
+    print(f"Saving evaluation in: {evalpath}")
     save_metrics(evalpath, metrics)

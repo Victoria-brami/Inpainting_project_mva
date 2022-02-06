@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from code.evaluation_tools.fid import get_fid
-import os
+from code.evaluation_tools.evaluation_metrics import get_mse, get_ssim, get_pnsr
 import torchvision
 
 class FIDInceptionV3(nn.Module):
@@ -10,7 +10,8 @@ class FIDInceptionV3(nn.Module):
     def __init__(self):
         super(FIDInceptionV3, self).__init__()
         resnet_model = torchvision.models.resnet50(pretrained=False)
-        checkpoint = torch.load('/gpfswork/rech/rnt/uuj49ar/resnet50-0676ba61.pth')
+        #checkpoint = torch.load('/gpfswork/rech/rnt/uuj49ar/resnet50-0676ba61.pth')
+        checkpoint = torch.load('../../resnet50-0676ba61.pth', map_location='cpu')
         resnet_model.load_state_dict(checkpoint)
 
         self.model = torch.nn.Sequential(*list(resnet_model.children())[:-1])
@@ -47,7 +48,7 @@ class ModelEvaluation:
         sigma = np.cov(activations, rowvar=False)
         return mu, sigma
 
-    def evaluate_model(self, gt_loader, gen_loader):
+    def evaluate_model(self, gt_loader, gen_loader, mask_loader=None, fid_only=True):
         metrics = {}
         gt_features = self.compute_embeddings(gt_loader)
         gen_features = self.compute_embeddings(gen_loader)
@@ -57,5 +58,10 @@ class ModelEvaluation:
         gen_params = {"mu": gen_stats[0], "sigma": gen_stats[1]}
 
         metrics["fid"] = get_fid(gt_params, gen_params)
+
+        if not fid_only:
+            metrics["mse"] = get_mse(gt_loader, gen_loader, mask_loader)
+            metrics["ssim"] = get_ssim(gt_loader, gen_loader, mask_loader)
+            metrics["pnsr"] = get_pnsr(gt_loader, gen_loader, mask_loader)
 
         return metrics
