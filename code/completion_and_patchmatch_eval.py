@@ -24,7 +24,7 @@ class ComparisonEvalDataset(Dataset):
         self.data_iterator = data_iterator
         self.params = params
         self.mode = mode
-        assert self.mode in ["cn", "patch7", "gt"]
+        #assert self.mode in ["cn", "patch7", "gt", "no_global_cn", "no_local_cn"]
         self.build_batches()
 
     def build_batches(self):
@@ -87,6 +87,8 @@ def comparison_evaluate(params, device='cpu', fid_only=False):
     mask_dataset = ComparisonImageDataset(os.path.join(params["comparison_data_dir"]),
                                          transform=None,
                                          recursive_search=True, image_type='mask')
+    print(len(gt1_dataset), gt1_dataset.imgpaths)
+    print(len(gt2_dataset), gt2_dataset.imgpaths)
     all_seeds = list(range(params["niter"]))
     all_metrics = {}
 
@@ -107,9 +109,8 @@ def comparison_evaluate(params, device='cpu', fid_only=False):
             data_iterator2 = DataLoader(gt2_dataset, batch_size=params["comparison_batch_size"], shuffle=False,
                                        num_workers=2)
             gt_dataset = ComparisonEvalDataset("gt", data_iterator, params)
-            print(params["model_to_compare"])
+            print('\n', params["model_to_compare"])
             gen_dataset =  ComparisonEvalDataset(params["model_to_compare"], data_iterator2, params)
-
             gt_loader = DataLoader(gt_dataset, batch_size=params["comparison_batch_size"], shuffle=False, num_workers=2)
             gen_loader = DataLoader(gen_dataset, batch_size=params["comparison_batch_size"], shuffle=False, num_workers=2)
 

@@ -46,10 +46,16 @@ class ComparisonImageDataset(data.Dataset):
                                 imgpaths.append(file)
                     else:
                         if image_type !='gt':
-                            if file.endswith('_{}.jpg'.format(image_type)):
-                                file = os.path.join(root, file)
-                                if self.__is_imgfile(file):
-                                    imgpaths.append(file)
+                            if image_type == 'no_global_cn' or image_type =='no_local_cn' or image_type=='channel0_cn' or image_type=='channel44_cn':
+                                if file.endswith('_{}.jpg'.format(image_type)):
+                                    file = os.path.join(root, file)
+                                    if self.__is_imgfile(file):
+                                        imgpaths.append(file)
+                            else:
+                                if file.endswith('_{}.jpg'.format(image_type)) and len(file) == 13:
+                                    file = os.path.join(root, file)
+                                    if self.__is_imgfile(file):
+                                        imgpaths.append(file)
                         else:
                             if len(file) == 10:
                                 file = os.path.join(root, file)

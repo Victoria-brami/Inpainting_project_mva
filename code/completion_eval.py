@@ -83,7 +83,7 @@ def compute_mpv(train_dataset, mpv=None, device="cpu"):
     return mpv
 
 
-def evaluate(params, device='cpu'):
+def evaluate(params, device='cpu', fid_only=True):
     print("0_ Start evaluation process")
     if params["layer_idx"] != 100:
         model = CompletionNetworkZero(int(params["layer_idx"]))
@@ -129,7 +129,7 @@ def evaluate(params, device='cpu'):
             gt_loader = DataLoader(gt_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=2)
             gen_loader = DataLoader(gen_dataset, batch_size=params["batch_size"], shuffle=True, num_workers=2)
 
-            all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader)
+            all_metrics[seed] = model_evaluator.evaluate_model(gt_loader, gen_loader, device='cuda')
 
             print("Iteration {}: FID score: {}".format(idx, all_metrics[seed]))
             del gt_loader
